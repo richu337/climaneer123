@@ -1,6 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
+import { setAutoMode } from "./firebase";
 import { 
   insertSensorReadingSchema,
   insertAlertSchema,
@@ -132,6 +133,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Auto mode endpoint
+  app.post("/api/auto-mode", async (req, res) => {
+    try {
+      const { enabled } = req.body;
+      const result = await setAutoMode(enabled);
+      res.json(result);
+    } catch (error: any) {
+      res.status(error.status || 500).json({ message: error.message });
+    }
+  });
+
   // Statistics endpoints
   app.get("/api/statistics", async (_req, res) => {
     try {
@@ -170,7 +182,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           const str = String(value);
           // If value contains comma, quote, or newline, wrap in quotes and escape quotes
           if (str.includes(",") || str.includes('"') || str.includes("\n")) {
-            return `"${str.replace(/"/g, '""')}"`;
+            return `"${str.replace(/"/g, '''"')}"`;
           }
           return str;
         };
